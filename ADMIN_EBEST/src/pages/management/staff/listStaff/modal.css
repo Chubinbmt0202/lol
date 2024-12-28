@@ -1,0 +1,8 @@
+.custom-modal .ant-modal {
+  top: 20px; /* Điều chỉnh vị trí modal nếu cần */
+  max-width: 2000px !important; /* Tùy chỉnh chiều rộng theo nhu cầu */
+}
+
+.custom-modal .ant-modal-body {
+  padding: 24px; /* Điều chỉnh khoảng cách trong modal */
+}
