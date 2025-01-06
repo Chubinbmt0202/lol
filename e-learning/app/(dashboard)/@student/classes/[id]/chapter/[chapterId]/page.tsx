@@ -9,8 +9,9 @@ import Link from "next/link";
 
 interface Exercise {
   id: number;
-  title: string;
-  dueDate: string;
+  tenBaiHoc: string;
+  ngayNopBai: string;
+  trangThai: string;
 }
 
 export default function ChapterIdPage() {
@@ -22,6 +23,11 @@ export default function ChapterIdPage() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const pathParts = pathname.split('/').filter(Boolean);
+
+  //lấy thông tin người dùng trong local storage
+  const userRole = JSON.parse(localStorage.getItem("userRole") || "{}");
+  const userID = userRole.idnguoidung
+  console.log("userID", userID);
 
   const fetchExercises = async () => {
     if (idKhoahoc && classId && chapterId) {
@@ -50,31 +56,60 @@ export default function ChapterIdPage() {
         console.log("dataEx", dataEx);
 
         const groupedQuestions = dataEx.reduce((acc, question) => {
-          const { tenBaiHoc } = question;
+          const { tenBaiHoc, ngayNopBai } = question;
           if (!acc[tenBaiHoc]) {
             acc[tenBaiHoc] = [];
           }
-          acc[tenBaiHoc].push(question);
+          const formattedDate = new Date(ngayNopBai).toLocaleDateString('vi-VN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+          });
+          acc[tenBaiHoc].push({ ...question, ngayNopBai: formattedDate });
           return acc;
         }, {});
 
         const result = Object.keys(groupedQuestions).map(key => ({
           tenBaiHoc: key,
+          ngayNopBai: groupedQuestions[key][0].ngayNopBai,
           questions: groupedQuestions[key]
         }));
 
         console.log("kết quả là", result);
-        setExercises(result);
+        // setExercises(result);
         localStorage.setItem('exercisesResult', JSON.stringify(result));
       } catch (error) {
         console.error('Failed to fetch exercises:', error);
       }
+
+      //sd/////////////////////////////////////
+
+      try {
+        const responseSubmitdata = await fetch('http://localhost:5000/api/getAllExcerciseSubmited', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ idChuong: chapterId, idNguoiDung: userID, idKhoaHoc: idKhoahoc, idLop: classId }), // Đảm bảo userID là một số
+        });
+    
+        if (!responseSubmitdata.ok) {
+            throw new Error(`Server error: ${responseSubmitdata.status} ${responseSubmitdata.statusText}`);
+        }
+    
+        const submissions = await responseSubmitdata.json();
+        console.log('Exercise submissions:', submissions);
+        setExercises(submissions.data);
+    } catch (error) {
+        console.error('Failed to fetch exercises submit:', error);
+    }
     }
   };
 
   useEffect(() => {
     const [resource, classId, section, chapterId] = pathParts;
     const idChuong = searchParams.get('idKhoaHoc');
+    console.log("Path parts in chapter student:", idChuong);
 
     const parts = idChuong?.split("?") || [];
     const mainId = parts[0];
@@ -90,6 +125,12 @@ export default function ChapterIdPage() {
     setClassId(classId);
     setChapterId(chapterId);
     setIdKhoahoc(idChuong);
+
+    // Store values in localStorage
+    localStorage.setItem('classId', classId || '');
+    localStorage.setItem('chapterId', chapterId || '');
+    localStorage.setItem('idKhoahoc', idChuong || '');
+
   }, [pathname, searchParams]);
 
   useEffect(() => {
@@ -136,7 +177,7 @@ export default function ChapterIdPage() {
         </div>
         <div className="space-y-3">
           {exercises.map((exercise, index) => (
-            <Link key={index} href={`/classes/${classId}/exercise/${index}?chapter=${chapterId}`}>
+            <Link key={index} href={`/classes/${classId}/exercise/${index}?chapter=${chapterId}?baitap=${index}?idKhoaHoc=${idKhoahoc}`}>
               <div className="card bg-base-100 border hover:shadow-md transition-all">
                 <div className="card-body p-4">
                   <div className="flex items-center justify-between">
@@ -146,7 +187,15 @@ export default function ChapterIdPage() {
                     </div>
                     <div className="flex items-center gap-2 text-base-content/70">
                       <Clock size={16} />
-                      <span className="text-sm">Đến hạn: {exercise.dueDate}</span>
+                      <span className="text-sm">Đến hạn: {exercise.ngayNopBai} ||</span>
+
+                      {
+                        exercise.trangThai === "Chưa nộp" ? (
+                          <span className="text-sm text-red-500">Chưa nộp</span>
+                        ) : (
+                          <span className="text-sm text-green-500">Đã nộp</span>
+                        )
+                      }
                     </div>
                   </div>
                 </div>

@@ -1,33 +1,16 @@
-// import { useQuery } from '@tanstack/react-query';
-import {
-  Button,
-  Card,
-  Col,
-  DatePicker,
-  Form,
-  Input,
-  Modal,
-  Popconfirm,
-  Row,
-  Select,
-  Space,
-  message
-} from 'antd';
+import React, { useEffect, useState } from 'react';
+import { Button, Card, Col, DatePicker, Form, Input, Modal, Popconfirm, Row, Select, Space, message } from 'antd';
 import Table, { ColumnsType } from 'antd/es/table';
 import { TableRowSelection } from 'antd/es/table/interface';
-import { useEffect, useState } from 'react';
-
-import { IconButton, Iconify } from '@/components/icon';
-import StaffModal from '../listStaff/addStaff/index';
 import { useRouter, usePathname } from '@/router/hooks';
+import { useStudentContext } from '@/context/StudentContext';
+import { useStaffContext } from '@/context/StaffContext';
+import StaffModal from '../listStaff/addStaff/index';
 import ProTag from '@/theme/antd/components/tag';
-
+import { IconButton, Iconify } from '@/components/icon';
 import './modal.css';
 
 import { Organization, Student, Teacher } from '#/entity';
-import type { DatePickerProps } from 'antd';
-import { useStudentContext } from '@/context/StudentContext';
-import { useStaffContext } from '@/context/StaffContext';
 
 type SearchFormFieldType = Pick<Organization, 'name' | 'status'>;
 type SearchFormType = Pick<Student, 'name' | 'statusSalary' | 'statusLearn'>;
@@ -36,9 +19,8 @@ export default function OrganizationPage() {
   const [searchForm] = Form.useForm();
   const { deleteStudent } = useStudentContext();
   const { push } = useRouter();
-  const {staffData} = useStaffContext();
+  const { staffData } = useStaffContext();
   const [staffDataApi, setStaffDataApi] = useState([]);
-  console.log('Staff data in list:', staffData);
   const pathname = usePathname();
   const [selectedRowKeys, setselectedRowKeys] = useState<React.Key[]>([]);
   const [studentSelected, setStudentSelected] = useState<Student[]>([]);
@@ -66,6 +48,7 @@ export default function OrganizationPage() {
     show: false,
     onOk: () => {
       setStaffModalProps((prev) => ({ ...prev, show: false }));
+      fetchStaff();
     },
     onCancel: () => {
       setStaffModalProps((prev) => ({ ...prev, show: false }));
@@ -77,7 +60,7 @@ export default function OrganizationPage() {
     { title: 'Ngày sinh', dataIndex: 'ngaydangki', align: 'center', width: 100 },
     { title: 'Số điện thoại', dataIndex: 'sdt', align: 'center', width: 100 },
     { title: 'Chức vụ', dataIndex: 'vaitro', align: 'center', width: 100 },
-    { title: 'Giới tính', dataIndex: 'sex', align: 'center', width: 100 },
+    { title: 'Giới tính', dataIndex: 'gioiTinh', align: 'center', width: 100 },
     {
       title: 'Trạng thái',
       dataIndex: 'trangthai',
@@ -128,12 +111,10 @@ export default function OrganizationPage() {
     setselectedRowKeys(newSelectedRowKeys);
   };
 
-  // rowSelection objects indicates the need for row selection
   const rowSelection: TableRowSelection<Teacher> = {
     selectedRowKeys,
     onChange: (newSelectedRowKeys) => {
       setselectedRowKeys(newSelectedRowKeys);
-      // console.log('rowSelection.onChange', newSelectedRowKeys);
       onSelectionChange({ newSelectedRowKeys });
     },
     onSelect: (record, selected, newSelectRow) => {
@@ -151,7 +132,7 @@ export default function OrganizationPage() {
   };
 
   const handleDelete = (id: string) => {
-    deleteStudent(id); // Gọi deleteStudent để xóa học viên từ context
+    deleteStudent(id);
   };
   
   const onDelete = () => {
@@ -161,10 +142,10 @@ export default function OrganizationPage() {
       onOk: () => {
         if (selectedRowKeys.length > 0) {
           selectedRowKeys.forEach((id) => {
-            deleteStudent(id as string); // Xóa tất cả học viên được chọn
+            deleteStudent(id as string);
           });
         }
-        setDeleteStaffModalProps(null); // Đóng modal sau khi xóa
+        setDeleteStaffModalProps(null);
       },
     });
   };
@@ -173,7 +154,7 @@ export default function OrganizationPage() {
     try {
       const response = await fetch('http://localhost:5000/api/users');
       
-      if(response.status !== 200) {
+      if (response.status !== 200) {
         throw new Error('Failed to fetch data');
       } else {
         console.log('Fetch data successfully');
@@ -207,7 +188,6 @@ export default function OrganizationPage() {
       },
     }));
   };
-
 
   const handleDetailStudent = () => {
     console.log('handleDetailStudent');
@@ -263,7 +243,7 @@ export default function OrganizationPage() {
             </Col>
             <Col span={6}>
               <div className="flex justify-end">
-                {/* <Button onClick={onSearchFormReset}>Reset</Button> */}
+                <Button type="default" onClick={onSearchFormReset}>Reset</Button>
                 <Button type="primary" className="ml-4">
                   Tìm nhân viên
                 </Button>
@@ -303,6 +283,7 @@ export default function OrganizationPage() {
         show={StaffModalPros.show}
         onOk={StaffModalPros.onOk}
         onCancel={StaffModalPros.onCancel}
+        fetchStaff={fetchStaff} // Truyền hàm fetchStaff vào StaffModal
       />
       {deleteStaffModalProps && (
         <Modal
@@ -335,4 +316,5 @@ type StaffModalProps = {
   show: boolean;
   onOk: VoidFunction;
   onCancel: VoidFunction;
+  fetchStaff: () => Promise<void>; // Thêm prop fetchStaff
 };

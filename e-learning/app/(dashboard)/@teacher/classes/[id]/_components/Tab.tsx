@@ -16,7 +16,7 @@ const Tab = ({ id }: Props) => {
   };
 
   return (
-    <div className="z-[9999] border-b bg-base-100 fixed top-16 w-full h-14 flex items-center px-6 shadow-sm">
+    <div className="z-[9] border-b bg-base-100 fixed top-16 w-full h-14 flex items-center px-6 shadow-sm">
       <div role="tablist" className="tabs tabs-lifted w-fit">
         <Link
           href={`/classes/${id}`}

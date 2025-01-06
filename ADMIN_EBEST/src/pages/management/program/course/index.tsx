@@ -1,5 +1,5 @@
 // import { useQuery } from '@tanstack/react-query';
-import { EditOutlined, EllipsisOutlined, ExpandOutlined } from '@ant-design/icons';
+import { EditOutlined, EllipsisOutlined, ExpandOutlined, DeleteOutlined } from '@ant-design/icons';
 import {
   Card,
   Button,
@@ -67,17 +67,6 @@ export default function OrganizationPage() {
     localStorage.setItem('courseSelect', JSON.stringify(course));
     push(`${pathname}/${course.idKhoaHoc}`);
   }
-
-  const handleDelete = (course: {
-    idKhoaHoc: number;
-    tenKhoaHoc: string;
-    moTa: string;
-    numberClass: string;
-    hocPhi: number;
-  }): void => {
-    // Delete course from API or database
-    alert("Delete course")
-  };
 
   const handleUpdate = (course: {
     idKhoaHoc: number;
@@ -184,6 +173,57 @@ export default function OrganizationPage() {
   
 
   const [form] = Form.useForm();
+
+  // Add this state near your other useState declarations
+const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
+const [courseToDelete, setCourseToDelete] = useState<{
+  idKhoaHoc: number;
+  tenKhoaHoc: string;
+  moTa: string;
+  numberClass: string;
+  hocPhi: number;
+} | null>(null);
+
+// Update the handleDelete function
+const handleDelete = (course: {
+  idKhoaHoc: number;
+  tenKhoaHoc: string;
+  moTa: string;
+  numberClass: string;
+  hocPhi: number;
+}): void => {
+  setCourseToDelete(course);
+  setIsDeleteModalVisible(true);
+};
+
+// Add the function to handle the actual deletion
+const confirmDelete = async () => {
+  if (!courseToDelete) return;
+  
+  try {
+    const response = await fetch(`http://localhost:5000/api/deleteCourse/${courseToDelete.idKhoaHoc}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (response.ok) {
+      alert('Xóa khóa học thành công');
+      fetchCourse(); // Refresh the course list
+    } else {
+      alert('Có lỗi xảy ra khi xóa khóa học');
+    }
+  } catch (error) {
+    console.error('Error deleting course:', error);
+    alert('Có lỗi xảy ra khi xóa khóa học');
+  } finally {
+    setIsDeleteModalVisible(false);
+    setCourseToDelete(null);
+  }
+};
+
+// Add the delete confirmation modal to your JSX, place it alongside your other modals
   return (
     <Space direction="vertical" size="large" className="w-full">
       <Card>
@@ -226,7 +266,7 @@ export default function OrganizationPage() {
                 <ExpandOutlined onClick={() => handleDetail(course)} />,
                 // <ExpandOutlined onClick={() => push(`${pathname}/${course.idKhoaHoc}`)} />,
                 <EditOutlined key="edit" onClick={() => handleUpdate(course)} />,
-                <EllipsisOutlined key="ellipsis" onClick={() => handleDelete(course)} />,
+                <DeleteOutlined key="ellipsis" onClick={() => handleDelete(course)} />,
               ]}
             >
               <Card.Meta
@@ -238,10 +278,7 @@ export default function OrganizationPage() {
                     <p className="font-bold">Số lượng lớp học: {course.soLuongLop}</p>
                     <p className="font-bold">
                       Học phí:
-                      {course.hocPhi.toLocaleString('vi-VN', {
-                        style: 'currency',
-                        currency: 'VND',
-                      })}
+                      {course.hocPhi}
                     </p>
                   </>
                 }
@@ -351,6 +388,37 @@ export default function OrganizationPage() {
             </Form.Item>
           </Form>
       </Modal>
+
+      <Modal
+  title="Xác nhận xóa khóa học"
+  visible={isDeleteModalVisible}
+  onCancel={() => {
+    setIsDeleteModalVisible(false);
+    setCourseToDelete(null);
+  }}
+  footer={[
+    <Button 
+      key="back" 
+      onClick={() => {
+        setIsDeleteModalVisible(false);
+        setCourseToDelete(null);
+      }}
+    >
+      Hủy
+    </Button>,
+    <Button 
+      key="submit" 
+      type="primary" 
+      danger
+      onClick={confirmDelete}
+    >
+      Xác nhận xóa
+    </Button>,
+  ]}
+>
+  <p>Bạn có chắc chắn muốn xóa khóa học "{courseToDelete?.tenKhoaHoc}" không?</p>
+  <p>Hành động này không thể hoàn tác.</p>
+</Modal>
     </Space>
   );
 }

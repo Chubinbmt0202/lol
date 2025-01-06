@@ -15,8 +15,7 @@ import {
   Radio,
   message,
 } from 'antd';
-import { useState } from 'react';
-
+import { useState, useEffect } from 'react';
 import type { GetProp, UploadFile, UploadProps } from 'antd';
 
 type FileType = Parameters<GetProp<UploadProps, 'beforeUpload'>>[0];
@@ -24,27 +23,19 @@ type FileType = Parameters<GetProp<UploadProps, 'beforeUpload'>>[0];
 const { Dragger } = Upload;
 
 export default function Sentence() {
-  const items = [
-    { id_ID: '11', content: 'Câu hỏi 11', tag: ' Câu hỏi từ loại' },
-    { id_ID: '12', content: 'Câu hỏi 12', tag: ' Câu hỏi ngữ pháp' },
-    { id_ID: '13', content: 'Câu hỏi 13', tag: ' Câu hỏi từ vựng' },
-    { id_ID: '14', content: 'Câu hỏi 14', tag: ' Danh từ' },
-    { id_ID: '15', content: 'Câu hỏi 15', tag: ' Đại từ' },
-    { id_ID: '16', content: 'Câu hỏi 16', tag: ' Tính từ' },
-    { id_ID: '17', content: 'Câu hỏi 17', tag: ' Thì' },
-    { id_ID: '18', content: 'Câu hỏi 18', tag: ' Thể' },
-    { id_ID: '19', content: 'Câu hỏi 19', tag: ' Trạng từ' },
-    { id_ID: '20', content: 'Câu hỏi 20', tag: ' Động từ nguyên mẫu' },
-    { id_ID: '21', content: 'Câu hỏi 21', tag: ' Phân từ và Cấu trúc phân từ' },
-    { id_ID: '22', content: 'Câu hỏi 22', tag: ' Giới từ' },
-    { id_ID: '23', content: 'Câu hỏi 23', tag: ' Liên từ' },
-    { id_ID: '24', content: 'Câu hỏi 24', tag: ' Mệnh đề quan hệ' },
+  const [items, setItems] = useState<any[]>([]);
+  
+  const options = [
+    { value: '1', label: 'Reading' },
+    { value: '2', label: 'Listening' },
+    { value: '3', label: 'Writing' },
+    { value: '4', label: 'Speaking' },
   ];
-
-  const options = items.map((item) => ({ label: item.tag, value: item.tag }));
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [open, setOpen] = useState(false);
+  const [tag, setTag] = useState('');
+  const [questionCount, setQuestionCount] = useState(0);
 
   const showModal = () => setIsModalVisible(true);
   const handleOk = () => setIsModalVisible(false);
@@ -52,15 +43,16 @@ export default function Sentence() {
   const showDrawer = () => setOpen(true);
   const onClose = () => {
     setOpen(false);
-    // Reset questions state when closing the drawer
     setQuestions([]);
   };
 
   type Question = {
     id: string;
+    parentName: string;
     content: string;
     answers: string[];
     correctAnswer: string;
+    tag: string;
   };
 
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -91,6 +83,39 @@ export default function Sentence() {
     setFileList(newFileList);
   const handleAudioChange: UploadProps['onChange'] = ({ fileList: newFileList }) =>
     setAudioFileList(newFileList);
+
+  const fetchData = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/getAllQuestionReadingDienCau');
+      const data = await response.json();
+      console.log('Data:', data);
+      setItems(data.data);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const postQuestions = async (questions: Question[]) => {
+    console.log('Posting questions:', questions[0]);
+    try {
+      const response = await fetch(`http://localhost:5000/api/addQuestionReadingDienCau`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(questions[0]),
+      });
+      const data = await response.json();
+      console.log('Success:', data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   const addQuestion = () => {
     if (questions.length >= 1) {
       message.warning('Bạn chỉ được thêm tối đa 1 câu hỏi.');
@@ -98,11 +123,16 @@ export default function Sentence() {
     }
     const newQuestion = {
       id: Date.now().toString(),
+      parentName: `Câu hỏi ${questionCount + 1}`,
       content: '',
       answers: ['', '', '', ''],
       correctAnswer: '',
+      tag,
+      phan: 'Điền vào câu',
+      loai: "Reading"
     };
     setQuestions([...questions, newQuestion]);
+    setQuestionCount(questionCount + 1);
   };
 
   interface UpdateQuestionContentParams {
@@ -142,6 +172,7 @@ export default function Sentence() {
   }
 
   const selectCorrectAnswer = ({ id, value }: SelectCorrectAnswerParams) => {
+    console.log('Đáp án đúng:', value);  // Kiểm tra giá trị
     const updatedQuestions = questions.map((q) => {
       if (q.id === id) {
         q.correctAnswer = value;
@@ -150,6 +181,7 @@ export default function Sentence() {
     });
     setQuestions(updatedQuestions);
   };
+  
 
   const uploadButton = (
     <div>
@@ -157,6 +189,30 @@ export default function Sentence() {
       <div style={{ marginTop: 8 }}>Upload</div>
     </div>
   );
+
+  const handleSave = () => {
+    // Kiểm tra xem người dùng đã nhập đầy đủ thông tin chưa
+    for (const question of questions) {
+      if (!question.content) {
+        message.warning('Vui lòng nhập tên câu hỏi.');
+        return;
+      }
+      for (const answer of question.answers) {
+        if (!answer) {
+          message.warning('Vui lòng nhập đầy đủ các đáp án.');
+          return;
+        }
+      }
+      if (!question.correctAnswer) {
+        message.warning('Vui lòng chọn đáp án đúng.');
+        return;
+      }
+    }
+
+    console.log('Danh sách câu hỏi:', questions);  // Log ra câu hỏi
+    postQuestions(questions);  // Gửi dữ liệu nếu cần
+    onClose();  // Đóng drawer sau khi lưu
+  };
 
   return (
     <div className="h-[500px] overflow-y-auto pt-4">
@@ -174,12 +230,12 @@ export default function Sentence() {
       >
         <Row gutter={[5, 8]}>
           {items.map((item) => (
-            <Col span={6} key={item.id_ID}>
+            <Col span={6} key={item.idCauHoi}>
               <Card className="mb-2" bordered={false} hoverable>
                 <Tag color="blue" className="mb-2">
-                  #{item.tag}
+                  #{item.tagCauHoi}
                 </Tag>
-                <p>{item.content}</p>
+                <p>{item.tenCauHoi}</p>
               </Card>
             </Col>
           ))}
@@ -212,7 +268,7 @@ export default function Sentence() {
         extra={
           <Space>
             <Button onClick={onClose}>Huỷ</Button>
-            <Button onClick={onClose} type="primary">
+            <Button onClick={handleSave} type="primary">
               Lưu
             </Button>
           </Space>
@@ -222,7 +278,7 @@ export default function Sentence() {
           <Row gutter={[16, 16]} className="ml-2 mt-8">
             <Col span={24}>
               <Form.Item label="Chọn Tag">
-                <Select placeholder="Chọn một tag" options={options} />
+                <Select placeholder="Chọn một tag" options={options} onChange={setTag} />
               </Form.Item>
             </Col>
           </Row>
@@ -254,7 +310,7 @@ export default function Sentence() {
                       <Row gutter={[16, 16]}>
                         {question.answers.map((answer, index) => (
                           <Col span={12} key={index}>
-                            <Radio value={`answer${index + 1}`}>
+                            <Radio value={answer}>
                               <Form.Item label={`Đáp án ${index + 1}`}>
                                 <Input
                                   placeholder={`Nhập đáp án ${index + 1}`}
@@ -269,6 +325,7 @@ export default function Sentence() {
                         ))}
                       </Row>
                     </Radio.Group>
+
                   </Form>
                 </Card>
               </Col>

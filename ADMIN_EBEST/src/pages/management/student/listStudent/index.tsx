@@ -6,6 +6,7 @@ import {
   DatePicker,
   Form,
   Input,
+  message,
   Modal,
   Popconfirm,
   Row,
@@ -33,7 +34,8 @@ type SearchFormType = Pick<Student, 'name' | 'statusSalary' | 'statusLearn'>;
 export default function OrganizationPage() {
   const [searchForm] = Form.useForm();
   const {studentData} = useStudentContext();
-  const { deleteStudent } = useStudentContext();
+  const [studentDataApi, setStudentDataApi] = useState([]);
+  // const { deleteStudent } = useStudentContext();
   const { push } = useRouter();
   const pathname = usePathname();
   const [selectedRowKeys, setselectedRowKeys] = useState<React.Key[]>([]);
@@ -65,6 +67,7 @@ export default function OrganizationPage() {
     show: false,
     onOk: () => {
       setStudentModalProps((prev) => ({ ...prev, show: false }));
+      fetchDataStudent();
     },
     onCancel: () => {
       setStudentModalProps((prev) => ({ ...prev, show: false }));
@@ -72,11 +75,11 @@ export default function OrganizationPage() {
   });
 
   const columns: ColumnsType<Student> = [
-    { title: 'Họ về học viên', dataIndex: 'name', width: 200 },
-    { title: 'Lớp', dataIndex: 'order', align: 'center', width: 100 },
+    { title: 'Họ và tên học viên', dataIndex: 'ho_va_ten', width: 200 },
+    { title: 'Lớp', dataIndex: 'lop_hoc_dang_ky', align: 'center', width: 100 },
     {
       title: 'Tình trạng học phí',
-      dataIndex: 'statusSalary',
+      dataIndex: 'trang_thai_hoc_vien',
       align: 'center',
       width: 120,
       render: (statusSalary) => (
@@ -94,7 +97,7 @@ export default function OrganizationPage() {
         <ProTag color={statusLearn === 'Đang học' ? 'success' : 'warning'}>{statusLearn}</ProTag>
       ),
     },
-    { title: 'Số điện thoại', dataIndex: 'phone', align: 'center', width: 120 },
+    { title: 'Số điện thoại', dataIndex: 'so_dien_thoai', align: 'center', width: 120 },
     {
       title: 'Hành động     ',
       key: 'operation',
@@ -105,7 +108,7 @@ export default function OrganizationPage() {
           <IconButton>
             <Iconify
               icon="mdi:card-account-details"
-              onClick={() => handleDetailStudent(record.id)}
+              onClick={() => handleDetailStudent(record.idnguoidung)}
               size={18}
             />
           </IconButton>
@@ -117,7 +120,7 @@ export default function OrganizationPage() {
             okText="Yes"
             cancelText="No"
             placement="left"
-            onConfirm={() => handleDelete(record.id)}
+            onConfirm={() => handleDelete(record.idnguoidung)}
           >
             <IconButton>
               <Iconify icon="mingcute:delete-2-fill" size={18} className="text-error" />
@@ -160,8 +163,26 @@ export default function OrganizationPage() {
 
 
   const handleDelete = (id: string) => {
-    deleteStudent(id); // Gọi deleteStudent để xóa học viên từ context
+    console.log('handleDelete', id);
+    deleteStudent(id);
   };
+
+  const deleteStudent = async (id: string) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/deleteStudent/${id}`, {
+        method: 'DELETE',
+      });
+      if (response.ok) {
+        message.success('Xoá học viên thành công');
+        fetchDataStudent();
+      } else {  
+        throw new Error('Failed to delete student');
+      }
+    } catch (error) {
+      message.error('Xoá học viên thất bại');
+      console.error('Delete student error:', error);
+    }
+  }
   
   const onDelete = () => {
     setDeleteStudentModalProps({
@@ -212,6 +233,22 @@ export default function OrganizationPage() {
       push(`${pathname}/${selectedRowKeys[0]}`);
     }
   };
+
+  const fetchDataStudent = async () => {
+    const response = await fetch('http://localhost:5000/api/getAllStudent');
+    const data = await response.json();
+    console.log("dữ liệu toàn bộ học viên", data.data);
+    setStudentDataApi(data.data);
+    if (response.ok) {
+      message.success('Lấy dữ liệu học viên thành công');
+    } else {
+      throw new Error('Failed to fetch data');
+    }
+  };
+
+  useEffect(() => {
+    fetchDataStudent();
+  }, []);
 
   return (
     <Space direction="vertical" size="large" className="w-full">
@@ -280,11 +317,11 @@ export default function OrganizationPage() {
         }
       >
         <Table
-          rowKey="id"
+          rowKey="idnguoidung"
           size="small"
           scroll={{ x: 'max-content' }}
           pagination={false}
-          dataSource={studentData}
+          dataSource={studentDataApi}
           columns={columns}
           rowSelection={{ ...rowSelection }}
         />

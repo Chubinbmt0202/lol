@@ -2,10 +2,10 @@
 <br> 
 <br>
 <img src="./src/assets/images/logo.png" height="140" />
-<h3> Slash Admin </h3>
+<h3> Ebest English </h3>
   <p>
     <p style="font-size: 14px">
-      Slash Admin 是一款现代化的后台管理模板，基于 React 18、Vite、Ant Design 和 TypeScript 构建。它旨在帮助开发人员快速搭建功能强大的后台管理系统。
+      Ebest English 是一款现代化的后台管理模板，基于 React 18、Vite、Ant Design 和 TypeScript 构建。它旨在帮助开发人员快速搭建功能强大的后台管理系统。
     </p>
     <br />
     <br />

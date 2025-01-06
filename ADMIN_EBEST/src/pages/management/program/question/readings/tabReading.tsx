@@ -37,6 +37,7 @@ export default function TabReading() {
           <div className="flex w-full flex-col">
             <Tabs
               tabPosition={tabPosition}
+              destroyInactiveTabPane={true}
               items={tabs.map((tab) => ({
                 label: tab.title,
                 key: tab.key,

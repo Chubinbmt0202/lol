@@ -5,6 +5,7 @@ import {
   Card,
   Button,
   Tag,
+  notification,
   Modal,
   Form,
   Select,
@@ -16,7 +17,7 @@ import {
   Radio,
 } from 'antd';
 import TextArea from 'antd/es/input/TextArea';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import type { GetProp, UploadFile, UploadProps } from 'antd';
 
@@ -25,37 +26,27 @@ type FileType = Parameters<GetProp<UploadProps, 'beforeUpload'>>[0];
 const { Dragger } = Upload;
 
 export default function Paragraph() {
-  const items = [
-    { id_ID: '25', content: 'Câu hỏi 25', tag: ' Câu hỏi từ loại' },
-    { id_ID: '26', content: 'Câu hỏi 26', tag: ' Câu hỏi ngữ pháp' },
-    { id_ID: '27', content: 'Câu hỏi 27', tag: ' Câu hỏi từ vựng' },
-    { id_ID: '28', content: 'Câu hỏi 28', tag: ' Điền câu vào đoạn văn' },
-    { id_ID: '29', content: 'Câu hỏi 29', tag: ' Thư điện tử/ thư tay' },
-    { id_ID: '30', content: 'Câu hỏi 30', tag: ' Quảng cáo' },
-    { id_ID: '31', content: 'Câu hỏi 31', tag: ' Danh từ' },
-    { id_ID: '32', content: 'Câu hỏi 32', tag: ' Đại từ' },
-    { id_ID: '33', content: 'Câu hỏi 33', tag: ' Tính từ' },
-    { id_ID: '34', content: 'Câu hỏi 34', tag: ' Thì' },
-    { id_ID: '35', content: 'Câu hỏi 35', tag: ' Trạng từ' },
-    { id_ID: '36', content: 'Câu hỏi 36', tag: ' Động từ nguyên mẫu có to' },
-    { id_ID: '37', content: 'Câu hỏi 37', tag: ' Phân từ và Cấu trúc phân từ' },
-    { id_ID: '38', content: 'Câu hỏi 38', tag: ' Liên từ' },
-    { id_ID: '39', content: 'Câu hỏi 39', tag: ' Mệnh đề quan hệ' },
-    { id_ID: '40', content: 'Câu hỏi 40', tag: ' Câu điều kiện' },
-  ];
+  const [items, setItems] = useState<any[]>([]);
 
-  const options = items.map((item) => ({ label: item.tag, value: item.tag }));
+  const options = [
+    { value: '1', label: 'Reading' },
+    { value: '2', label: 'Listening' },
+    { value: '3', label: 'Writing' },
+    { value: '4', label: 'Speaking' },
+  ];
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [open, setOpen] = useState(false);
 
   const showModal = () => setIsModalVisible(true);
-  const handleOk = () => setIsModalVisible(false);
+  const handleOk = () => {
+    console.log("Modal form submitted");
+    setIsModalVisible(false);
+  };
   const handleCancel = () => setIsModalVisible(false);
   const showDrawer = () => setOpen(true);
   const onClose = () => {
     setOpen(false);
-    // Reset questions state when closing the drawer
     setQuestions([]);
   };
 
@@ -67,6 +58,9 @@ export default function Paragraph() {
   };
 
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [logData, setLogData] = useState(null);
+  const [deBai, setDeBai] = useState(''); // State to store deBai content
+  const [questionCounter, setQuestionCounter] = useState(1); // Counter for questions
 
   const getBase64 = (file: FileType): Promise<string> =>
     new Promise((resolve, reject) => {
@@ -105,7 +99,7 @@ export default function Paragraph() {
       answers: ['', '', '', ''],
       correctAnswer: '',
     };
-    setQuestions([...questions, newQuestion]);
+    setQuestions([...questions, newQuestion].sort((a, b) => a.content.localeCompare(b.content)));
   };
 
   interface UpdateQuestionContentParams {
@@ -120,7 +114,7 @@ export default function Paragraph() {
       }
       return q;
     });
-    setQuestions(updatedQuestions);
+    setQuestions(updatedQuestions.sort((a, b) => a.content.localeCompare(b.content)));
   };
 
   interface UpdateAnswerParams {
@@ -136,7 +130,7 @@ export default function Paragraph() {
       }
       return q;
     });
-    setQuestions(updatedQuestions);
+    setQuestions(updatedQuestions.sort((a, b) => a.content.localeCompare(b.content)));
   };
 
   interface SelectCorrectAnswerParams {
@@ -151,6 +145,11 @@ export default function Paragraph() {
       }
       return q;
     });
+    setQuestions(updatedQuestions.sort((a, b) => a.content.localeCompare(b.content)));
+  };
+
+  const deleteQuestion = (id: string) => {
+    const updatedQuestions = questions.filter((q) => q.id !== id);
     setQuestions(updatedQuestions);
   };
 
@@ -160,6 +159,83 @@ export default function Paragraph() {
       <div style={{ marginTop: 8 }}>Upload</div>
     </div>
   );
+
+  const logDetails = () => {
+    const sortedQuestions = [...questions].sort((a, b) => a.content.localeCompare(b.content));
+    
+    const logData = {
+      CauHoi: `Câu hỏi ${questionCounter}`, // Use questionCounter for CauHoi
+      Tag: options[0].label,
+      DeBai: deBai, // Use the deBai state value
+      CauHoiCon: sortedQuestions.map((q, index) => ({
+        TenCauHoiCon: q.content,
+        LuaChon: q.answers,
+        DapAnDung: q.correctAnswer
+      })),
+      phan: 'Điền vào đoạn',
+      loai: "Reading"
+    };
+
+    return logData;
+  };
+
+  const fetchData = async () => {
+    // Fetch data from server
+    // Fetch API, axios, etc.
+    try {
+      const response = await fetch('http://localhost:5000/api/getAllQuestionsReadingDienDoan');
+      const data = await response.json();
+      console.log("Data received from server", data)
+      setItems(data.data);
+      setQuestionCounter(data.data.length + 1); // Set the initial question counter based on fetched data
+    } catch (error) {
+      console.error("Error fetching data from server", error)
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handleDrawerSave = async () => {
+    const dataSent = logDetails();
+
+    console.log("Data sent to server", dataSent)
+
+    try {
+      // Send data to server
+      // Fetch API, axios, etc.
+      const response = await fetch('http://localhost:5000/api/addQuestionReadingDienDoan', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(dataSent),
+      });
+
+      console.log("Response from server", response)
+
+      if (response.status === 200) {
+        notification.success(
+          {
+            message: 'Thêm câu hỏi thành công',
+            description: 'Đã thêm câu hỏi thành công',
+          }
+        )
+        setQuestionCounter(questionCounter + 1); // Increase counter after successful save
+      } else {
+        notification.error(
+          {
+            message: 'Thêm câu hỏi thất bại',
+            description: 'Đã có lỗi xảy ra khi thêm câu hỏi',
+          }
+        )
+      }
+    } catch ( error ) {
+      console.error("Error sending data to server", error)
+    }
+    onClose();
+  };
 
   return (
     <div className="h-[500px] overflow-y-auto pt-4">
@@ -177,12 +253,12 @@ export default function Paragraph() {
       >
         <Row gutter={[5, 8]}>
           {items.map((item) => (
-            <Col span={6} key={item.id_ID}>
+            <Col span={6} key={item.idCauHoi}>
               <Card className="mb-2" bordered={false} hoverable>
                 <Tag color="blue" className="mb-2">
-                  #{item.tag}
+                  #{item.tagCauHoi}
                 </Tag>
-                <p>{item.content}</p>
+                <p>{item.tenCauHoi}</p>
               </Card>
             </Col>
           ))}
@@ -215,14 +291,13 @@ export default function Paragraph() {
         extra={
           <Space>
             <Button onClick={onClose}>Huỷ</Button>
-            <Button onClick={onClose} type="primary">
+            <Button onClick={handleDrawerSave} type="primary">
               Lưu
             </Button>
           </Space>
         }
       >
         <Form layout="vertical" hideRequiredMark>
-          {/* Phần chọn Tag với chế độ chọn một */}
           <Row gutter={[16, 16]} className="ml-2 mt-8">
             <Col span={24}>
               <Form.Item label="Chọn Tag">
@@ -230,7 +305,7 @@ export default function Paragraph() {
               </Form.Item>
             </Col>
           </Row>
-          <TextArea placeholder="Nhập đề bài" rows={4} />
+          <TextArea placeholder="Nhập đề bài" rows={4} value={deBai} onChange={e => setDeBai(e.target.value)} />
           <Row gutter={[16, 16]} className=" mt-4">
             <Button className="ml-2" type="primary" onClick={addQuestion}>
               + Thêm câu hỏi
@@ -240,7 +315,20 @@ export default function Paragraph() {
           <Row gutter={[5, 8]} className="mt-4">
             {questions.map((question) => (
               <Col span={24} key={question.id}>
-                <Card className="mb-2" bordered={false} hoverable>
+                <Card
+                  className="mb-2"
+                  bordered={false}
+                  hoverable
+                  extra={
+                    <Button
+                      type="link"
+                      danger
+                      onClick={() => deleteQuestion(question.id)}
+                    >
+                      Xóa
+                    </Button>
+                  }
+                >
                   <Form layout="vertical" hideRequiredMark>
                     <Form.Item label="Tên câu hỏi">
                       <TextArea
@@ -260,13 +348,17 @@ export default function Paragraph() {
                       <Row gutter={[16, 16]}>
                         {question.answers.map((answer, index) => (
                           <Col span={12} key={index}>
-                            <Radio value={`answer${index + 1}`}>
+                            <Radio value={answer}>
                               <Form.Item label={`Đáp án ${index + 1}`}>
                                 <Input
                                   placeholder={`Nhập đáp án ${index + 1}`}
                                   value={answer}
                                   onChange={(e) =>
-                                    updateAnswer({ id: question.id, index, value: e.target.value })
+                                    updateAnswer({
+                                      id: question.id,
+                                      index,
+                                      value: e.target.value,
+                                    })
                                   }
                                 />
                               </Form.Item>

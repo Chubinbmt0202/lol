@@ -4,19 +4,20 @@ import {
   Col,
   Card,
   Button,
+  Tag,
+  notification,
   Modal,
   Form,
+  Select,
   message,
   Input,
   Drawer,
   Space,
   Upload,
-  Select,
-  Tag,
   Radio,
 } from 'antd';
 import TextArea from 'antd/es/input/TextArea';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import type { GetProp, UploadFile, UploadProps } from 'antd';
 
@@ -24,39 +25,28 @@ type FileType = Parameters<GetProp<UploadProps, 'beforeUpload'>>[0];
 
 const { Dragger } = Upload;
 
-export default function Comprehension() {
-  const items = [
-    { id_ID: '41', content: 'Câu hỏi 41', tag: ' Câu hỏi tìm thông tin' },
-    { id_ID: '42', content: 'Câu hỏi 42', tag: ' Câu hỏi tìm chi tiết sai' },
-    { id_ID: '43', content: 'Câu hỏi 43', tag: ' Câu hỏi về chủ đề, mục đích' },
-    { id_ID: '44', content: 'Câu hỏi 44', tag: ' Câu hỏi suy luận' },
-    { id_ID: '45', content: 'Câu hỏi 45', tag: ' Câu hỏi điền câu' },
-    { id_ID: '46', content: 'Câu hỏi 46', tag: ' Cấu trúc: một đoạn' },
-    { id_ID: '47', content: 'Câu hỏi 47', tag: ' Cấu trúc: nhiều đoạn' },
-    { id_ID: '48', content: 'Câu hỏi 48', tag: ' Dạng bài: Thư điện tử/ Thư tay' },
-    { id_ID: '49', content: 'Câu hỏi 49', tag: ' Dạng bài: Bài báo/ Bài đánh giá' },
-    { id_ID: '50', content: 'Câu hỏi 50', tag: ' Dạng bài: Advertisement - Quảng cáo' },
-    { id_ID: '51', content: 'Câu hỏi 51', tag: ' Dạng bài: Thông báo' },
-    { id_ID: '52', content: 'Câu hỏi 52', tag: ' Dạng bài: Text message chain - Chuỗi tin nhắn' },
-    { id_ID: '53', content: 'Câu hỏi 53', tag: ' Câu hỏi tìm từ đồng nghĩa' },
-    { id_ID: '54', content: 'Câu hỏi 54', tag: ' Câu hỏi về hàm ý câu nói' },
-    { id_ID: '55', content: 'Câu hỏi 55', tag: ' Dạng bài: Schedule - Lịch trình, thời gian biểu' },
-    { id_ID: '56', content: 'Câu hỏi 56', tag: ' Dạng bài: Văn bản hướng dẫn' },
-    { id_ID: '57', content: 'Câu hỏi 57', tag: ' Dạng bài: Danh sách/ Thực đơn' },
-  ];
+export default function Paragraph() {
+  const [items, setItems] = useState<any[]>([]);
 
-  const options = items.map((item) => ({ label: item.tag, value: item.tag }));
+  const options = [
+    { value: '1', label: 'Reading' },
+    { value: '2', label: 'Listening' },
+    { value: '3', label: 'Writing' },
+    { value: '4', label: 'Speaking' },
+  ];
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [open, setOpen] = useState(false);
 
   const showModal = () => setIsModalVisible(true);
-  const handleOk = () => setIsModalVisible(false);
+  const handleOk = () => {
+    console.log("Modal form submitted");
+    setIsModalVisible(false);
+  };
   const handleCancel = () => setIsModalVisible(false);
   const showDrawer = () => setOpen(true);
   const onClose = () => {
     setOpen(false);
-    // Reset questions state when closing the drawer
     setQuestions([]);
   };
 
@@ -68,6 +58,7 @@ export default function Comprehension() {
   };
 
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [logData, setLogData] = useState(null);
 
   const getBase64 = (file: FileType): Promise<string> =>
     new Promise((resolve, reject) => {
@@ -155,12 +146,95 @@ export default function Comprehension() {
     setQuestions(updatedQuestions);
   };
 
+  const deleteQuestion = (id: string) => {
+    const updatedQuestions = questions.filter((q) => q.id !== id);
+    setQuestions(updatedQuestions);
+  };
+
   const uploadButton = (
     <div>
       <PlusOutlined />
       <div style={{ marginTop: 8 }}>Upload</div>
     </div>
   );
+
+  const logDetails = () => {
+    const sortedQuestions = [...questions].sort((a, b) => a.content.localeCompare(b.content));
+    
+    const logData = {
+      CauHoi: "Câu hỏi 1",
+      Tag: options[0].label,
+      DeBai: document.querySelector('textarea')?.value,
+      CauHoiCon: sortedQuestions.map((q, index) => ({
+        TenCauHoiCon: q.content,
+        LuaChon: q.answers,
+        DapAnDung: q.correctAnswer
+      })),
+      phan: 'Đọc hiểu',
+      loai: "Reading"
+    };
+    // console.log("dữ liệu log", logData);
+
+    return logData;
+
+    // setLogData(logData); // Nếu muốn lưu vào state
+  };
+
+  const fetchData = async () => {
+    // Fetch data from server
+    // Fetch API, axios, etc.
+    try {
+      const response = await fetch('http://localhost:5000/api/getAllQuestionsReadingDocHieu');
+      const data = await response.json();
+      console.log("Data received phần đọc hiểu from server", data)
+      setItems(data.data);
+    } catch (error) {
+      console.error("Error fetching data from server", error)
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handleDrawerSave = async () => {
+    const dataSent = logDetails();
+
+    console.log("Data sent to server", dataSent)
+
+    try {
+      // Send data to server
+      // Fetch API, axios, etc.
+      const response = await fetch('http://localhost:5000/api/addQuestionReadingDocHieu', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(dataSent),
+      });
+
+      console.log("Response from server", response)
+
+      if (response.status === 200) {
+        notification.success(
+          {
+            message: 'Thêm câu hỏi thành công',
+            description: 'Đã thêm câu hỏi thành công',
+          }
+        )
+      } else {
+        notification.error(
+          {
+            message: 'Thêm câu hỏi thất bại',
+            description: 'Đã có lỗi xảy ra khi thêm câu hỏi',
+          }
+        )
+      }
+    } catch ( error ) {
+      console.error("Error sending data to server", error)
+    }
+    onClose();
+  };
 
   return (
     <div className="h-[500px] overflow-y-auto pt-4">
@@ -178,12 +252,12 @@ export default function Comprehension() {
       >
         <Row gutter={[5, 8]}>
           {items.map((item) => (
-            <Col span={6} key={item.id_ID}>
+            <Col span={6} key={item.idCauHoi}>
               <Card className="mb-2" bordered={false} hoverable>
                 <Tag color="blue" className="mb-2">
-                  #{item.tag}
+                  #{item.tagCauHoi}
                 </Tag>
-                <p>{item.content}</p>
+                <p>{item.tenCauHoi}</p>
               </Card>
             </Col>
           ))}
@@ -204,7 +278,7 @@ export default function Comprehension() {
       </Modal>
 
       <Drawer
-        title="Tạo câu hỏi cho phần đọc hiểu"
+        title="Tạo câu hỏi cho phần điền đọc hiểu"
         width={720}
         onClose={onClose}
         open={open}
@@ -216,14 +290,13 @@ export default function Comprehension() {
         extra={
           <Space>
             <Button onClick={onClose}>Huỷ</Button>
-            <Button onClick={onClose} type="primary">
+            <Button onClick={handleDrawerSave} type="primary">
               Lưu
             </Button>
           </Space>
         }
       >
         <Form layout="vertical" hideRequiredMark>
-          {/* Phần chọn Tag với chế độ chọn một */}
           <Row gutter={[16, 16]} className="ml-2 mt-8">
             <Col span={24}>
               <Form.Item label="Chọn Tag">
@@ -241,7 +314,20 @@ export default function Comprehension() {
           <Row gutter={[5, 8]} className="mt-4">
             {questions.map((question) => (
               <Col span={24} key={question.id}>
-                <Card className="mb-2" bordered={false} hoverable>
+                <Card
+                  className="mb-2"
+                  bordered={false}
+                  hoverable
+                  extra={
+                    <Button
+                      type="link"
+                      danger
+                      onClick={() => deleteQuestion(question.id)}
+                    >
+                      Xóa
+                    </Button>
+                  }
+                >
                   <Form layout="vertical" hideRequiredMark>
                     <Form.Item label="Tên câu hỏi">
                       <TextArea
@@ -261,13 +347,17 @@ export default function Comprehension() {
                       <Row gutter={[16, 16]}>
                         {question.answers.map((answer, index) => (
                           <Col span={12} key={index}>
-                            <Radio value={`answer${index + 1}`}>
+                            <Radio value={answer}>
                               <Form.Item label={`Đáp án ${index + 1}`}>
                                 <Input
                                   placeholder={`Nhập đáp án ${index + 1}`}
                                   value={answer}
                                   onChange={(e) =>
-                                    updateAnswer({ id: question.id, index, value: e.target.value })
+                                    updateAnswer({
+                                      id: question.id,
+                                      index,
+                                      value: e.target.value,
+                                    })
                                   }
                                 />
                               </Form.Item>

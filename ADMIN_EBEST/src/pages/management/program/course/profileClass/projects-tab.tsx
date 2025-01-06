@@ -85,7 +85,7 @@ export default function ProjectsTab() {
 
               <div className="flex flex-col">
                 <span className="ml-4 text-xl opacity-70">{item.name}</span>
-                <span className="text-md ml-4 opacity-50">Client: {item.client}</span>
+                <span className="text-md ml-4 opacity-50">Người tạo: {item.client}</span>
               </div>
 
               <div className="ml-auto flex opacity-70">
@@ -98,7 +98,7 @@ export default function ProjectsTab() {
             <main className="mt-4 w-full">
               <div className="my-2 flex justify-between">
                 <span>
-                  Start Date:
+                  Ngày tạo:
                   <span className="ml-2 opacity-50">{item.startDate.format('DD/MM/YYYY')}</span>
                 </span>
 
@@ -115,7 +115,7 @@ export default function ProjectsTab() {
             <footer className="flex w-full  flex-col items-center">
               <div className="mb-4 flex w-full justify-between">
                 <span>
-                  All Hours:
+                  Nộp bài:
                   <span className="ml-2 opacity-50">{item.allHours}</span>
                 </span>
 
@@ -127,10 +127,6 @@ export default function ProjectsTab() {
                     <Avatar src={memberAvatar} key={index} />
                   ))}
                 </Avatar.Group>
-                <div className="ml-auto flex items-center opacity-50">
-                  <Iconify icon="solar:chat-round-line-linear" size={24} />
-                  <span className="ml-2">{item.messages}</span>
-                </div>
               </div>
             </footer>
           </Card>

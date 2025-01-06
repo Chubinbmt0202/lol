@@ -18,37 +18,38 @@ interface DataType {
   status: number;
 }
 
-export default function ProfileTab() {
+export default function ProfileTab({student}) {
+  console.log("student bên detail:", student);
   const { username } = useUserInfo();
   const theme = useThemeToken();
   const AboutItems = [
     {
       icon: <Iconify icon="fa-solid:user" size={18} />,
       label: 'Họ và tên',
-      val: 'Võ Trần Trung Anh',
+      val: student?.ho_va_ten,
     },
     {
       icon: <Iconify icon="bi:pass-fill" size={18} />,
       label: 'Các lớp đang theo học',
-      val: 'Võ Trần Trung Anh',
+      val: student?.cac_lop_dang_theo_hoc || 'Chưa có',
     },
     {
       icon: <Iconify icon="clarity:date-solid" size={18} />,
       label: 'Ngày sinh',
-      val: '1999-09-09',
+      val: student?.ngay_sinh,
     },
     {
       icon: <Iconify icon="tabler:location-filled" size={18} />,
       label: 'Địa chỉ',
-      val: 'Cơ sở 1 - 12 Hoàng Thị Loan',
+      val: student?.dia_chi || "Chưa có",
     },
     {
       icon: <Iconify icon="ion:language" size={18} />,
       label: 'Khoá học đã đăng ký',
-      val: 'English',
+      val: student?.khoa_hoc_da_dang_ky || "Chưa có",
     },
-    { icon: <Iconify icon="ph:phone-fill" size={18} />, label: 'Liên hệ', val: '(123)456-7890' },
-    { icon: <Iconify icon="ic:baseline-email" size={18} />, label: 'Email', val: username },
+    { icon: <Iconify icon="ph:phone-fill" size={18} />, label: 'Liên hệ', val: student?.so_dien_thoai || "Chưa có" },
+    { icon: <Iconify icon="ic:baseline-email" size={18} />, label: 'Email', val: student?.email || "Chưa có" },
   ];
 
   const fakeProjectItems = () => {

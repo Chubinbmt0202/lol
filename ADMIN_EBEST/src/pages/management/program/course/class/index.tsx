@@ -1,4 +1,3 @@
-// src/pages/OrganizationPage.tsx
 import React, { useState, useEffect } from 'react';
 import { Button, Card, Form, Input, Row, Col, Select, Space, Table, Popconfirm, Dropdown, Menu } from 'antd';
 import { useRouter, usePathname } from '@/router/hooks';
@@ -6,6 +5,17 @@ import CreateCourseModal from './addClass/index';
 import { MoreOutlined } from '@ant-design/icons';
 import { useParams } from 'react-router-dom';
 import { format } from 'date-fns';
+
+interface ClassData {
+  idLop: number;
+  tenLop: string;
+  soLuongHocVien: number;
+  ngayMoLop: string;
+  ngayKetThuc: string;
+  tenGiaoVien: string;
+  tenKhoaHoc: string;
+  idKhoaHoc: number;
+}
 
 interface ClassModalProps {
   formValue: {
@@ -25,19 +35,18 @@ interface ClassModalProps {
 export default function OrganizationPage() {
   const [searchForm] = Form.useForm();
   const { id } = useParams();
-  const [classes, setClasses] = useState<any[]>([]);
+  const [classes, setClasses] = useState<ClassData[]>([]);
   const { push } = useRouter();
   const pathname = usePathname();
 
   const fetchDataClass = async (): Promise<void> => {
     try {
       const response = await fetch(`http://localhost:5000/api/getClassByCourses/${id}`);
-      const data = await response.json();  // Chuyển dữ liệu thành JSON
-      console.log('Dữ liệu từ API Admin:', data.data.data);  // Log dữ liệu
-      const dataClasses = data.data.data;
-      setClasses(dataClasses);  // Lưu dữ liệu vào state
+      const data = await response.json();
+      console.log('Dữ liệu từ API Admin:', data.data.data);
+      setClasses(data.data.data);
     } catch (error) {
-      console.error('Lỗi khi gọi API:', error);  // Log lỗi nếu có
+      console.error('Lỗi khi gọi API:', error);
     }
   };
   
@@ -45,10 +54,9 @@ export default function OrganizationPage() {
     fetchDataClass();
   }, [id]);
 
-    // Hàm để định dạng ngày
-    const formatDate = (dateString: string) => {
-      return format(new Date(dateString), 'dd-MM-yyyy'); // Định dạng ngày kiểu DD-MM-YYYY
-    };
+  const formatDate = (dateString: string) => {
+    return format(new Date(dateString), 'dd-MM-yyyy');
+  };
 
   const [studentModalPros, setStudentModalProps] = useState<ClassModalProps>({
     formValue: {
@@ -70,46 +78,51 @@ export default function OrganizationPage() {
   });
 
   const onCreate = () => {
-    setStudentModalProps((prev) => ({ ...prev, show: true })); //
+    setStudentModalProps((prev) => ({ ...prev, show: true }));
   };
 
-  interface DataType {
-    id: string;
-    name: string;
-    numberStudent: number;
-    createDate: string;
-    endDate: string;
-    price: string;
-    status?: string;
-  }
-
-  interface ColumnType {
-    title: string;
-    dataIndex?: string;
-    key?: string;
-    align?: 'center';
-    width?: number;
-    render?: (_: any, record: DataType) => JSX.Element;
-  }
-
-  const handleDetail = (record: DataType) => {
-    const idLop = record.idLop;
-    // navigate(`/course/${id}/${idLop}`);
-    push(`${pathname}/${idLop}`);
+  const handleDetail = (record: ClassData) => {
+    push(`${pathname}/${record.idLop}`);
   };
 
-  const columns: ColumnType[] = [
-    { title: 'Tên lớp học', dataIndex: 'tenLop', width: 200 },
-    { title: 'Số lượng học viên', dataIndex: 'soLuongHocVien', align: 'center', width: 100 },
-    { title: 'Ngày mở lớp', dataIndex: 'ngayMoLop', align: 'center', width: 120, render: (text: string) => <span>{formatDate(text)}</span> },
-    { title: 'Ngày kết thúc', dataIndex: 'ngayKetThuc', align: 'center', width: 120, render: (text: string) => <span>{formatDate(text)}</span> },
-    { title: 'Giáo viên phụ trách', dataIndex: 'tenGiaoVien', align: 'center', width: 120 },
+  const columns = [
+    { 
+      title: 'Tên lớp học', 
+      dataIndex: 'tenLop', 
+      width: 200 
+    },
+    { 
+      title: 'Số lượng học viên', 
+      dataIndex: 'soLuongHocVien', 
+      align: 'center' as const, 
+      width: 100 
+    },
+    { 
+      title: 'Ngày mở lớp', 
+      dataIndex: 'ngayMoLop', 
+      align: 'center' as const, 
+      width: 120,
+      render: (text: string) => <span>{formatDate(text)}</span>
+    },
+    { 
+      title: 'Ngày kết thúc', 
+      dataIndex: 'ngayKetThuc', 
+      align: 'center' as const, 
+      width: 120,
+      render: (text: string) => <span>{formatDate(text)}</span>
+    },
+    { 
+      title: 'Giáo viên phụ trách', 
+      dataIndex: 'tenGiaoVien', 
+      align: 'center' as const, 
+      width: 120 
+    },
     {
       title: 'Hành động',
       key: 'operation',
-      align: 'center',
+      align: 'center' as const,
       width: 80,
-      render: (_, record) => {
+      render: (_: any, record: ClassData) => {
         const menu = (
           <Menu>
             <Menu.Item key="edit">
@@ -161,7 +174,7 @@ export default function OrganizationPage() {
       </Card>
 
       <Card
-        title={`Danh sách lớp học trong khoá : Tiếng Anh Giao tiếp C201`}
+        title={`Danh sách lớp học trong khoá: ${classes[0]?.tenKhoaHoc || 'Chưa có'}`}
         extra={
           <Button type="primary" onClick={onCreate}>
             Thêm mới lớp học
@@ -178,7 +191,6 @@ export default function OrganizationPage() {
       </Card>
 
       <CreateCourseModal {...studentModalPros} />
-      {/* <EditCourseModal {...studentModalPros} /> */}
     </Space>
   );
 }

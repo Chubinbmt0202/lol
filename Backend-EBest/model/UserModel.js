@@ -4,7 +4,7 @@ const { pool } = require("../config/db");
 async function getAllUsers() {
   try {
     const query =
-      "SELECT * FROM NguoiDung WHERE vaitro IN ('Admin', 'Giáo viên')";
+      "SELECT * FROM NguoiDung WHERE vaitro IN ('Admin', 'giaovien')";
     const [rows] = await pool.promise().query(query);
     console.log("Query results:", rows);
 

@@ -24,83 +24,12 @@ export default function ProfileTab() {
   const { username } = useUserInfo();
   const theme = useThemeToken();
   const AboutItems = [
-    { icon: <Iconify icon="fa-solid:user" size={18} />, label: 'Full Name', val: username },
-    { icon: <Iconify icon="eos-icons:role-binding" size={18} />, label: 'Role', val: 'Developer' },
-    { icon: <Iconify icon="tabler:location-filled" size={18} />, label: 'Country', val: 'USA' },
-    { icon: <Iconify icon="ion:language" size={18} />, label: 'Language', val: 'English' },
-    { icon: <Iconify icon="ph:phone-fill" size={18} />, label: 'Contact', val: '(123)456-7890' },
-    { icon: <Iconify icon="ic:baseline-email" size={18} />, label: 'Email', val: username },
-  ];
-
-  const ConnectionsItems = [
-    {
-      avatar: faker.image.avatarGitHub(),
-      name: faker.person.fullName(),
-      connections: `${faker.number.int(100)} Connections`,
-      connected: faker.datatype.boolean(),
-    },
-
-    {
-      avatar: faker.image.avatarGitHub(),
-      name: faker.person.fullName(),
-      connections: `${faker.number.int(100)} Connections`,
-      connected: faker.datatype.boolean(),
-    },
-
-    {
-      avatar: faker.image.avatarGitHub(),
-      name: faker.person.fullName(),
-      connections: `${faker.number.int(100)} Connections`,
-      connected: faker.datatype.boolean(),
-    },
-
-    {
-      avatar: faker.image.avatarGitHub(),
-      name: faker.person.fullName(),
-      connections: `${faker.number.int(100)} Connections`,
-      connected: faker.datatype.boolean(),
-    },
-
-    {
-      avatar: faker.image.avatarGitHub(),
-      name: faker.person.fullName(),
-      connections: `${faker.number.int(100)} Connections`,
-      connected: faker.datatype.boolean(),
-    },
-  ];
-
-  const TeamItems = [
-    {
-      avatar: <Iconify icon="devicon:react" size={36} />,
-      name: 'React Developers',
-      members: `${faker.number.int(100)} Members`,
-      tag: <ProTag color="warning">Developer</ProTag>,
-    },
-    {
-      avatar: <Iconify icon="devicon:figma" size={36} />,
-      name: 'UI Designer',
-      members: `${faker.number.int(100)} Members`,
-      tag: <ProTag color="cyan">Designer</ProTag>,
-    },
-    {
-      avatar: <Iconify icon="logos:jest" size={36} />,
-      name: 'Test Team',
-      members: `${faker.number.int(100)} Members`,
-      tag: <ProTag color="success">Test</ProTag>,
-    },
-    {
-      avatar: <Iconify icon="logos:nestjs" size={36} />,
-      name: 'Nest.js Developers',
-      members: `${faker.number.int(100)} Members`,
-      tag: <ProTag color="warning">Developer</ProTag>,
-    },
-
-    {
-      avatar: <Iconify icon="logos:twitter" size={36} />,
-      name: 'Digital Marketing',
-      members: `${faker.number.int(100)} Members`,
-      tag: <ProTag>Marketing</ProTag>,
-    },
+    { icon: <Iconify icon="fa-solid:user" size={18} />, label: 'Giáo viên phụ trách', val: username },
+    { icon: <Iconify icon="eos-icons:role-binding" size={18} />, label: 'Số lượng học viên', val: 'Developer' },
+    { icon: <Iconify icon="tabler:location-filled" size={18} />, label: 'Thời gian vào học', val: 'USA' },
+    { icon: <Iconify icon="ion:language" size={18} />, label: 'Khóa học', val: 'English' },
+    { icon: <Iconify icon="ph:phone-fill" size={18} />, label: 'Phòng học', val: '(123)456-7890' },
+    { icon: <Iconify icon="ic:baseline-email" size={18} />, label: 'Thòi gian tốt nghiệp', val: username },
   ];
 
   const fakeProjectItems = () => {
@@ -180,7 +109,7 @@ export default function ProfileTab() {
         <Col span={24} md={12} lg={8}>
           <Card className="flex-col">
             <div className="flex w-full flex-col">
-              <Typography.Title level={5}>About</Typography.Title>
+              <Typography.Title level={5}>Thông tin lớp học</Typography.Title>
               <Typography.Text>{faker.lorem.paragraph()}</Typography.Text>
 
               <div className="mt-2 flex flex-col gap-4">
@@ -198,7 +127,7 @@ export default function ProfileTab() {
 
         <Col span={24} md={12} lg={16}>
           <Card className="flex-col !items-start">
-            <Typography.Title level={5}>Activity Timeline</Typography.Title>
+            <Typography.Title level={5}>Hoạt động</Typography.Title>
             <Timeline
               className="!mt-4 w-full"
               items={[

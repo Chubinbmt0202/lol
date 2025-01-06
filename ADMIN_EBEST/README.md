@@ -2,10 +2,10 @@
 <br> 
 <br>
 <img src="./src/assets/images/logo.png" height="140" />
-<h3> Slash Admin </h3>
+<h3> Ebest English </h3>
   <p>
     <p style="font-size: 14px">
-      Slash Admin is a modern admin dashboard template built with React 18, Vite, Ant Design, and TypeScript. It is designed to help developers quickly create powerful admin management systems.
+      Ebest English is a modern admin dashboard template built with React 18, Vite, Ant Design, and TypeScript. It is designed to help developers quickly create powerful admin management systems.
     </p>
     <br />
     <br />

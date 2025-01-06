@@ -1,224 +1,184 @@
-import { useQuery } from '@tanstack/react-query';
-import {
-  Button,
-  Card,
-  Col,
-  Form,
-  Input,
-  InputNumber,
-  Modal,
-  Popconfirm,
-  Radio,
-  Row,
-  Select,
-  Space,
-} from 'antd';
-import Table, { ColumnsType } from 'antd/es/table';
-import { TableRowSelection } from 'antd/es/table/interface';
-import { useEffect, useState } from 'react';
+import { Card, List, Typography, Button, Modal, Form, Input, Select, Upload } from 'antd';
+import { UploadOutlined } from '@ant-design/icons';
+import { useState } from 'react';
 
-import orgService from '@/api/services/orgService';
-import { IconButton, Iconify } from '@/components/icon';
-import ProTag from '@/theme/antd/components/tag';
+const { Text } = Typography;
+const { Option } = Select;
 
-import { Organization } from '#/entity';
-
-type SearchFormFieldType = Pick<Organization, 'name' | 'status'>;
-
-export default function OrganizationPage() {
-  const [searchForm] = Form.useForm();
-  const [organizationModalPros, setOrganizationModalProps] = useState<OrganizationModalProps>({
-    formValue: {
-      id: '',
-      name: '',
-      status: 'enable',
-    },
-    title: 'New',
-    show: false,
-    onOk: () => {
-      setOrganizationModalProps((prev) => ({ ...prev, show: false }));
-    },
-    onCancel: () => {
-      setOrganizationModalProps((prev) => ({ ...prev, show: false }));
-    },
-  });
-
-  const columns: ColumnsType<Organization> = [
-    { title: 'Name', dataIndex: 'name', width: 300 },
-    { title: 'Order', dataIndex: 'order', align: 'center', width: 60 },
-    {
-      title: 'Status',
-      dataIndex: 'status',
-      align: 'center',
-      width: 120,
-      render: (status) => (
-        <ProTag color={status === 'enable' ? 'success' : 'error'}>{status}</ProTag>
-      ),
-    },
-    { title: 'Desc', dataIndex: 'desc', align: 'center', width: 300 },
-    {
-      title: 'Action',
-      key: 'operation',
-      align: 'center',
-      width: 100,
-      render: (_, record) => (
-        <div className="flex w-full justify-center text-gray">
-          <IconButton onClick={() => onEdit(record)}>
-            <Iconify icon="solar:pen-bold-duotone" size={18} />
-          </IconButton>
-          <Popconfirm title="Delete the Organization" okText="Yes" cancelText="No" placement="left">
-            <IconButton>
-              <Iconify icon="mingcute:delete-2-fill" size={18} className="text-error" />
-            </IconButton>
-          </Popconfirm>
-        </div>
-      ),
-    },
-  ];
-
-  // rowSelection objects indicates the need for row selection
-  const rowSelection: TableRowSelection<Organization> = {
-    onChange: (selectedRowKeys, selectedRows) => {
-      console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
-    },
-    onSelect: (record, selected, selectedRows) => {
-      console.log(record, selected, selectedRows);
-    },
-    onSelectAll: (selected, selectedRows, changeRows) => {
-      console.log(selected, selectedRows, changeRows);
-    },
-  };
-
-  const { data } = useQuery({
-    queryKey: ['orgs'],
-    queryFn: orgService.getOrgList,
-  });
-
-  const onSearchFormReset = () => {
-    searchForm.resetFields();
-  };
-
-  const onCreate = () => {
-    setOrganizationModalProps((prev) => ({
-      ...prev,
-      show: true,
-      title: 'Create New',
-      formValue: {
-        ...prev.formValue,
-        id: '',
-        name: '',
-        order: 1,
-        desc: '',
-        status: 'enable',
-      },
-    }));
-  };
-
-  const onEdit = (formValue: Organization) => {
-    setOrganizationModalProps((prev) => ({
-      ...prev,
-      show: true,
-      title: 'Edit',
-      formValue,
-    }));
-  };
-
-  return (
-    <Space direction="vertical" size="large" className="w-full">
-      <Card>
-        <Form form={searchForm}>
-          <Row gutter={[16, 16]}>
-            <Col span={24} lg={6}>
-              <Form.Item<SearchFormFieldType> label="Name" name="name" className="!mb-0">
-                <Input />
-              </Form.Item>
-            </Col>
-            <Col span={24} lg={6}>
-              <Form.Item<SearchFormFieldType> label="Status" name="status" className="!mb-0">
-                <Select>
-                  <Select.Option value="enable">
-                    <ProTag color="success">Enable</ProTag>
-                  </Select.Option>
-                  <Select.Option value="disable">
-                    <ProTag color="error">Disable</ProTag>
-                  </Select.Option>
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col span={24} lg={12}>
-              <div className="flex justify-end">
-                <Button onClick={onSearchFormReset}>Reset</Button>
-                <Button type="primary" className="ml-4">
-                  Cấu hình lương
-                </Button>
-              </div>
-            </Col>
-          </Row>
-        </Form>
-      </Card>
-
-      <Card
-        title="Organization List"
-        extra={
-          <Button type="primary" onClick={onCreate}>
-            New
-          </Button>
-        }
-      >
-        <Table
-          rowKey="id"
-          size="small"
-          scroll={{ x: 'max-content' }}
-          pagination={false}
-          columns={columns}
-          dataSource={data}
-          rowSelection={{ ...rowSelection }}
-        />
-      </Card>
-
-      <OrganizationModal {...organizationModalPros} />
-    </Space>
-  );
+interface Document {
+  name: string;
+  uploadDate: string;
+  uploader: string;
+  file?: File;
 }
 
-type OrganizationModalProps = {
-  formValue: Organization;
-  title: string;
-  show: boolean;
-  onOk: VoidFunction;
-  onCancel: VoidFunction;
+interface Course {
+  id: string;
+  name: string;
+  documents: Document[];
+}
+
+const initialCourses: Course[] = [
+  {
+    id: '1',
+    name: 'Course 1',
+    documents: [
+      { name: 'Document 1', uploadDate: '2025-01-01', uploader: 'User A' },
+      { name: 'Document 2', uploadDate: '2025-01-02', uploader: 'User B' },
+      { name: 'Document 3', uploadDate: '2025-01-03', uploader: 'User C' },
+      { name: 'Document 4', uploadDate: '2025-01-04', uploader: 'User D' },
+    ],
+  },
+  {
+    id: '2',
+    name: 'Course 2',
+    documents: [
+      { name: 'Document 5', uploadDate: '2025-01-05', uploader: 'User E' },
+      { name: 'Document 6', uploadDate: '2025-01-06', uploader: 'User F' },
+    ],
+  },
+];
+
+const handleViewDetails = (document: Document) => {
+  // Handle viewing document details here
+  console.log('Viewing details for document:', document);
 };
 
-function OrganizationModal({ title, show, formValue, onOk, onCancel }: OrganizationModalProps) {
-  const [form] = Form.useForm();
-  useEffect(() => {
-    form.setFieldsValue({ ...formValue });
-  }, [formValue, form]);
+const handleDelete = (courseId: string, document: Document, setCourses: any, courses: Course[]) => {
+  // Handle deleting document here
+  console.log('Deleting document:', document);
+  const updatedCourses = courses.map(course => {
+    if (course.id === courseId) {
+      return {
+        ...course,
+        documents: course.documents.filter(doc => doc.name !== document.name)
+      };
+    }
+    return course;
+  });
+  setCourses(updatedCourses);
+};
+
+export default function DocumentDisplay() {
+  const [courses, setCourses] = useState(initialCourses);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState<string | undefined>(undefined);
+  const [documentName, setDocumentName] = useState('');
+  const [file, setFile] = useState<File | null>(null);
+
+  const showModal = () => {
+    setIsModalVisible(true);
+  };
+
+  const handleOk = () => {
+    if (selectedCourse && documentName && file) {
+      // Add the new document to the selected course
+      const newDocument: Document = {
+        name: documentName,
+        uploadDate: new Date().toISOString().split('T')[0],
+        uploader: 'New User',
+        file: file,
+      };
+
+      const updatedCourses = courses.map(course => {
+        if (course.id === selectedCourse) {
+          return {
+            ...course,
+            documents: [...course.documents, newDocument],
+          };
+        }
+        return course;
+      });
+
+      setCourses(updatedCourses);
+      setIsModalVisible(false);
+      setSelectedCourse(undefined);
+      setDocumentName('');
+      setFile(null);
+    }
+  };
+
+  const handleCancel = () => {
+    setIsModalVisible(false);
+  };
+
+  const handleFileChange = (info: any) => {
+    if (info.file.status === 'removed') {
+      setFile(null);
+    } else {
+      setFile(info.file.originFileObj);
+    }
+  };
+
   return (
-    <Modal title={title} open={show} onOk={onOk} onCancel={onCancel}>
-      <Form
-        initialValues={formValue}
-        form={form}
-        labelCol={{ span: 4 }}
-        wrapperCol={{ span: 18 }}
-        layout="horizontal"
+    <div>
+      <Button onClick={showModal} style={{ marginBottom: 16 }}>
+        Add Document
+      </Button>
+      <Modal
+        title="Add Document"
+        visible={isModalVisible}
+        onOk={handleOk}
+        onCancel={handleCancel}
       >
-        <Form.Item<Organization> label="Name" name="name" required>
-          <Input />
-        </Form.Item>
-        <Form.Item<Organization> label="Order" name="order" required>
-          <InputNumber style={{ width: '100%' }} />
-        </Form.Item>
-        <Form.Item<Organization> label="Status" name="status" required>
-          <Radio.Group optionType="button" buttonStyle="solid">
-            <Radio value="enable"> Enable </Radio>
-            <Radio value="disable"> Disable </Radio>
-          </Radio.Group>
-        </Form.Item>
-        <Form.Item<Organization> label="Desc" name="desc">
-          <Input.TextArea />
-        </Form.Item>
-      </Form>
-    </Modal>
+        <Form layout="vertical">
+          <Form.Item label="Select Course">
+            <Select
+              value={selectedCourse}
+              onChange={value => setSelectedCourse(value)}
+            >
+              {courses.map(course => (
+                <Option key={course.id} value={course.id}>
+                  {course.name}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+          <Form.Item label="Document Name">
+            <Input
+              value={documentName}
+              onChange={e => setDocumentName(e.target.value)}
+            />
+          </Form.Item>
+          <Form.Item label="Upload File">
+            <Upload
+              beforeUpload={() => false} // Prevent automatic upload
+              onChange={handleFileChange}
+              fileList={file ? [file] : []}
+            >
+              <Button type="primary" icon={<UploadOutlined />}>Select File</Button>
+            </Upload>
+          </Form.Item>
+        </Form>
+      </Modal>
+      {courses.map(course => (
+        <Card
+          title={course.name}
+          key={course.id}
+          style={{ marginBottom: 16 }}
+        >
+          <List
+            size="small"
+            dataSource={course.documents}
+            renderItem={(item) => (
+              <List.Item
+                actions={[
+                  <Button onClick={() => handleViewDetails(item)} type="link">View Details</Button>,
+                  <Button onClick={() => handleDelete(course.id, item, setCourses, courses)} type="link" danger>Delete</Button>,
+                ]}
+              >
+                <div>
+                  <Text strong>{item.name}</Text>
+                  <br />
+                  <Text type="secondary">Uploaded on: {item.uploadDate}</Text>
+                  <br />
+                  <Text type="secondary">Uploader: {item.uploader}</Text>
+                </div>
+              </List.Item>
+            )}
+          />
+        </Card>
+      ))}
+    </div>
   );
 }

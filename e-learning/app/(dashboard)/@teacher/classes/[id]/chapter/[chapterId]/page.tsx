@@ -1,4 +1,4 @@
-'use client';
+"use client"
 
 import React, { useEffect, useState } from "react";
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
@@ -9,7 +9,13 @@ import { UploadDocumentButton } from "../../_components/UploadDocumentButton";
 interface Exercise {
   id: number;
   tenBaiHoc: string;
-  dueDate?: string; // Cập nhật kiểu dữ liệu để phù hợp với dữ liệu nhận được
+  dueDate?: string;
+  questions: Question[];
+}
+
+interface Question {
+  id: number;
+  questionText: string;
 }
 
 export default function ChapterIdPage() {
@@ -20,6 +26,7 @@ export default function ChapterIdPage() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const pathParts = pathname.split('/').filter(Boolean);
+  const router = useRouter();
 
   const fetchExercises = async () => {
     if (idKhoahoc && classId && chapterId) {
@@ -103,7 +110,7 @@ export default function ChapterIdPage() {
           Quay lại
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-primary">Chương 1: Phát âm</h1>
+          <h1 className="text-2xl font-bold text-primary">Chương 1: </h1>
           <div className="flex items-center gap-2 text-sm text-base-content/70 mb-1">
             <span>Chương ID: {chapterId}</span>
             <span>Lớp học ID: {classId}</span>
@@ -145,6 +152,7 @@ export default function ChapterIdPage() {
             <div 
               key={exercise.id}
               className="card bg-base-100 border hover:shadow-md transition-all"
+              onClick={() => router.push(`/classes/${classId}/exercise/${exercise.id}`)}
             >
               <div className="card-body p-4">
                 <div className="flex items-center justify-between">
@@ -154,7 +162,7 @@ export default function ChapterIdPage() {
                   </div>
                   <div className="flex items-center gap-2 text-base-content/70">
                     <Clock size={16} />
-                    {/* <span className="text-sm">Đến hạn: {exercise.dueDate}</span> */}
+                    <span className="text-sm">Đến hạn: {exercise.dueDate}</span>
                   </div>
                 </div>
               </div>

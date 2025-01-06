@@ -242,15 +242,6 @@ const MANAGEMENT_PERMISSION = {
           route: 'leave',
           component: '/management/staff/leave/index.tsx',
         },
-        {
-          id: '4754063958766963',
-          parentId: '2781684678535712',
-          label: 'sys.menu.staff.salary',
-          // name: 'Profile',
-          type: PermissionType.MENU,
-          route: 'salary',
-          component: '/management/teacher/salary/index.tsx',
-        },
       ],
     },
     {

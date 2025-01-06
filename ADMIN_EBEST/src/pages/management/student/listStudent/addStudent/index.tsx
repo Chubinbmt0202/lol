@@ -42,6 +42,9 @@ const StudentModal: React.FC<StudentModalProps> = ({ title, show, formValue, onO
     console.log('Initial form value:', formValue);  // Ghi log giá trị form ban đầu
   }, [formValue, form]);
 
+  const generateRandomId = () => {
+    return Math.floor(1000 + Math.random() * 9000).toString();
+  };
 // Handle "Lưu" button click
 const handleOk = async () => {
   try {
@@ -55,28 +58,26 @@ const handleOk = async () => {
     const updatedFormData: Student = {
       ...formData,
       ...values,
-      id: isEditing ? formData.id : `student_${Date.now()}`, // Nếu đang chỉnh sửa, giữ nguyên ID
+      id: isEditing ? formData.id : generateRandomId(), // Nếu đang chỉnh sửa, giữ nguyên ID
       birthdate: values.birthdate ? values.birthdate.format('YYYY-MM-DD') : formData.birthdate || '',
       sex: values.sex || formData.sex || '',
       job: values.job || formData.job || '',
-      objectivesLearn: values.objectivesLearn || formData.objectivesLearn || '',
-      course: values.course || formData.course || '',
-      statusSalary: isEditing ? formData.statusSalary : 'Pending', // Trạng thái học phí mặc định
-      statusLearn: isEditing ? formData.statusLearn : 'Chờ xếp lớp', // Trạng thái học mặc định
+      mucdichHoc: values.objectivesLearn || formData.objectivesLearn || '',
+      statusSalary: isEditing ? formData.statusSalary : 'Chưa thanh toán', // Trạng thái học phí mặc định
     };
 
-    const response = await fetch('http://localhost:5000/api/users', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(updatedFormData),
-    });
+    // const response = await fetch('http://localhost:5000/api/users', {
+    //   method: 'POST',
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //   },
+    //   body: JSON.stringify(updatedFormData),
+    // });
 
-    if (!response.ok) {
-      throw new Error('Có lỗi xảy ra khi gửi dữ liệu tới API');
-    }
-    message.success(isEditing ? 'Cập nhật thành công!' : 'Thêm học viên thành công!'); 
+    // if (!response.ok) {
+    //   throw new Error('Có lỗi xảy ra khi gửi dữ liệu tới API');
+    // }
+    // message.success(isEditing ? 'Cập nhật thành công!' : 'Thêm học viên thành công!'); 
 
     console.log('Form values:', values);
     console.log('Updated form data:', updatedFormData);
@@ -96,12 +97,45 @@ const handleOk = async () => {
             <li><b>Tài khoản:</b> {updatedFormData.userName}</li>
             <li><b>Email:</b> {updatedFormData.email}</li>
             <li><b>Số điện thoại:</b> {updatedFormData.phone}</li>
-            <li><b>Khoá học:</b> {updatedFormData.course}</li>
           </ul>
         </div>
       );
     }
 
+    // Log the student information to the console
+    const formsentData = updatedFormData;
+    const dataSent = {
+      id: formsentData.id,
+      name: formsentData.name,
+      password : formsentData.password,
+      sex: formsentData.sex,
+      birthdate: formsentData.birthdate,
+      userName: formsentData.userName,
+      phone: formsentData.phone,
+      job: formsentData.job,
+      email: formsentData.email,
+      mucdichHoc: formsentData.mucdichHoc,
+      statusSalary: formsentData.statusSalary,
+    }
+    console.log('Student information:', dataSent);
+
+    const response = await fetch('http://localhost:5000/api/addStudent', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(dataSent),
+    });
+
+    if (!response.ok) {
+      throw new Error('Có lỗi xảy ra khi gửi dữ liệu tới API');
+    }
+    message.success('Success')
+
+    // Reset form fields
+    
+    // Close modal
+    onCancel();
     // Callback to notify parent component and close modal
     onOk(updatedFormData);
   } catch (errorInfo) {
@@ -228,21 +262,11 @@ const handleOk = async () => {
             <Form.Item name="objectivesLearn">
               <p>Mục đích học</p>
               <Select className="w-full" onChange={handleSelectChange('objectivesLearn')}>
-                <Select.Option value="certificate">Chứng chỉ quốc tế</Select.Option>
-                <Select.Option value="job">Công việc</Select.Option>
-                <Select.Option value="settlement">Định cư</Select.Option>
-                <Select.Option value="study_abroad">Du học</Select.Option>
-              </Select>
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-            <Form.Item name="course">
-              <p>Khoá học đăng ký</p>
-              <Select className="w-full" onChange={handleSelectChange('course')}>
-                <Select.Option value="communication">Tiếng anh giao tiếp</Select.Option>
-                <Select.Option value="intermediate">Tiếng anh trung cấp</Select.Option>
-                <Select.Option value="foundation">Tiếng anh nền tảng</Select.Option>
-                <Select.Option value="intensive">Tiếng anh cấp tốc</Select.Option>
+                <Select.Option value="Chứng chỉ quốc tế">Chứng chỉ quốc tế</Select.Option>
+                <Select.Option value="Công việc">Công việc</Select.Option>
+                <Select.Option value="Định cư">Định cư</Select.Option>
+                <Select.Option value="Du học">Du học</Select.Option>
+                <Select.Option value="Khác">Khác</Select.Option>
               </Select>
             </Form.Item>
           </Col>

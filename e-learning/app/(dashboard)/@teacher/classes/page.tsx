@@ -4,23 +4,32 @@ import { ArrowUpRight, Folder, Users, Plus } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-const ClassesPage =  () => {
+const defaultBackgrounds = [
+  'https://images.unsplash.com/photo-1577896851231-70ef18881754?q=80&w=1470&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1513542789411-b6a5d4f31634?q=80&w=1474&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?q=80&w=1473&auto=format&fit=crop',
+];
 
-  const [classesData, setClassesData] = useState<any[]>([]);  // Để lưu trữ lớp học
+const getRandomBackground = () => {
+  const randomIndex = Math.floor(Math.random() * defaultBackgrounds.length);
+  return defaultBackgrounds[randomIndex];
+};
+
+const ClassesPage = () => {
+  const [classesData, setClassesData] = useState<any[]>([]); // Lưu trữ lớp học
+  const [filteredClasses, setFilteredClasses] = useState<any[]>([]); // Lưu trữ lớp học đã lọc
+  const [courses, setCourses] = useState<any[]>([]); // Lưu trữ danh sách khóa học
+  const [selectedCourse, setSelectedCourse] = useState<string>('all'); // Khóa học được chọn
 
   const fetchClasses = async () => {
     try {
-      // Lấy userRole từ localStorage
       const userRoleString = localStorage.getItem('userRole');
       if (!userRoleString) {
         console.error('Không tìm thấy userRole trong localStorage');
         return;
       }
 
-      // Chuyển đổi string thành object
       const userRole = JSON.parse(userRoleString);
-
-      // Lấy idnguoidung từ userRole
       const { idnguoidung } = userRole;
       if (!idnguoidung) {
         console.error('Không có idnguoidung trong userRole');
@@ -32,53 +41,82 @@ const ClassesPage =  () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ idnguoidung }), // Truyền idnguoidung vào trong body
+        body: JSON.stringify({ idnguoidung }),
       });
 
       const data = await response.json();
 
       if (data.success) {
-        console.log("Dữ liệu lớp học:", data.data.data );
-        setClassesData(data.data.data);  // Lưu dữ liệu lớp học vào state
+        const classes = data.data.data;
+        setClassesData(classes);
+        setFilteredClasses(classes);
+        
+        // Tạo danh sách khóa học duy nhất
+        const uniqueCourses = Array.from(new Set(classes.map((item: any) => item.tenKhoaHoc)));
+        setCourses(uniqueCourses);
       } else {
         console.error("Lỗi khi lấy dữ liệu lớp học:", data.message);
       }
     } catch (error) {
       console.error("Lỗi khi fetch lớp học:", error);
-    } 
+    }
+  };
+
+  // Hàm lọc lớp học
+  const filterClasses = (courseId: string) => {
+    setSelectedCourse(courseId);
+    if (courseId === 'all') {
+      setFilteredClasses(classesData);
+    } else {
+      const filtered = classesData.filter(classItem => classItem.tenKhoaHoc === courseId);
+      setFilteredClasses(filtered);
+    }
   };
 
   useEffect(() => {
-    fetchClasses();  // Gọi API khi component mount
-  }, []);  // Chạy một lần khi component mount
+    fetchClasses();
+  }, []);
 
   return (
     <div className="container mx-auto px-6">
       <div className="flex flex-row justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-left">Lớp học của tôi đó</h1>
+          <h1 className="text-3xl font-bold text-left">Lớp học của tôi</h1>
           <p className="text-base text-base-content/70 mt-1">
             Quản lý và giảng dạy các lớp học của bạn
           </p>
         </div>
-        <button className="btn btn-primary gap-2">
-          <Plus size={20} />
-          Tạo lớp học mới
-        </button>
+
+        {/* Phần lọc khóa học */}
+        <div className="flex items-center gap-4">
+          <select 
+            className="select select-bordered w-full max-w-xs"
+            value={selectedCourse}
+            onChange={(e) => filterClasses(e.target.value)}
+          >
+            <option value="all">Tất cả khóa học</option>
+            {courses.map((course, index) => (
+              <option key={index} value={course}>
+                {course}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
-        {classesData.map((classItem) => (
+        {filteredClasses.map((classItem) => (
           <div
             key={classItem.id}
-            className="card bg-base-100 shadow-md overflow-hidden transition-all duration-300 group"
+            className="card bg-base-100 shadow-md overflow-hidden transition-all duration-300 group hover:shadow-xl"
           >
             <div
               className="relative h-48"
               style={{
-                backgroundImage: `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.5)), url(${classItem.coverImage})`,
+                backgroundImage: `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.5)), url(${classItem.coverImage || getRandomBackground()})`,
                 backgroundSize: "cover",
                 backgroundPosition: "center",
+                backgroundColor: '#1a365d',
               }}
             >
               <div className="absolute top-6 left-6 right-16">

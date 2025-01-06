@@ -53,7 +53,49 @@ const TeacherModel = {
                 }
             });
         });
+    },
+
+    addTeacher: (data, callback) => {
+        console.log("Dữ liệu giáo viên nhận được:", data);
+        const newUser = {
+            hoTen: data.name,
+            userName: data.userName,
+            email: data.email,
+            ngaySinh: data.birthday,
+            matkhau: data.password, // Không mã hóa mật khẩu
+            sdt: data.phone,
+            diachi: data.diachi,
+            vaitro: data.jobTitle,
+            gioiTinh: data.sex
+        };
+
+        // Thêm vào bảng nguoidung
+        pool.query('INSERT INTO nguoidung SET ?', newUser, (err, result) => {
+            if (err) {
+                console.error('Database query error:', err);
+                return callback({ error: 1, success: 0, message: 'Database query failed with error: ' + err });
+            }
+            const userId = result.insertId;
+
+            // Thêm vào bảng giaovien
+            const newTeacher = {
+                idnguoidung: userId,
+                trangthai: 'Đang hoạt động'
+            };
+            pool.query('INSERT INTO giaovien SET ?', newTeacher, (err, result) => {
+                if (err) {
+                    console.error('Database query error:', err);
+                    return callback({ error: 1, success: 0, message: 'Database query failed with error: ' + err });
+                }
+                return callback(null, {
+                    success: 1,
+                    message: 'Teacher added successfully',
+                    data: result
+                });
+            });
+        });
     }
+
 };
 
 module.exports = TeacherModel;
